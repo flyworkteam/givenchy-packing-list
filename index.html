@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="tr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fly-Work | Akıllı Paket Listesi Dönüştürücü</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --primary: #3b82f6;
+            --primary-dark: #2563eb;
+            --primary-light: #eff6ff;
+            --text-main: #1e293b;
+            --text-sub: #64748b;
+            --success: #10b981;
+            --error: #ef4444;
+            --border: #e2e8f0;
+            --bg-gradient: linear-gradient(135deg, #f0f9ff 0%, #cbebff 100%);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg-gradient);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: var(--text-main);
+            padding: 20px;
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 24px;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            width: 100%;
+            max-width: 480px;
+            overflow: hidden;
+            transition: transform 0.3s ease;
+        }
+
+        .header {
+            padding: 2rem 2rem 1rem;
+            text-align: center;
+        }
+
+        .logo-area {
+            width: 56px;
+            height: 56px;
+            background: var(--primary-light);
+            color: var(--primary);
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 1rem;
+        }
+
+        .logo-area svg {
+            width: 32px;
+            height: 32px;
+        }
+
+        h1 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--text-main);
+            margin-bottom: 0.5rem;
+        }
+
+        p.subtitle {
+            color: var(--text-sub);
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .content {
+            padding: 0 2rem 2rem;
+        }
+
+        /* Upload Area Styling */
+        .upload-zone {
+            border: 2px dashed var(--border);
+            border-radius: 16px;
+            padding: 2.5rem 1.5rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            background: #fafafa;
+            position: relative;
+        }
+
+        .upload-zone:hover,
+        .upload-zone.drag-over {
+            border-color: var(--primary);
+            background: var(--primary-light);
+        }
+
+        .upload-icon {
+            color: #94a3b8;
+            margin-bottom: 1rem;
+            transition: color 0.2s;
+        }
+
+        .upload-zone:hover .upload-icon {
+            color: var(--primary);
+        }
+
+        .upload-text {
+            font-weight: 500;
+            color: var(--text-main);
+            margin-bottom: 0.25rem;
+        }
+
+        .upload-hint {
+            font-size: 0.85rem;
+            color: #94a3b8;
+        }
+
+        /* File Selected State */
+        .file-info {
+            display: none;
+            align-items: center;
+            background: var(--primary-light);
+            border: 1px solid #bfdbfe;
+            border-radius: 12px;
+            padding: 0.75rem 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .file-info.active {
+            display: flex;
+            animation: slideDown 0.3s ease;
+        }
+
+        .file-icon {
+            margin-right: 0.75rem;
+            color: var(--primary);
+        }
+
+        .file-name {
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: var(--primary-dark);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 250px;
+        }
+
+        /* Button Styling */
+        .btn-primary {
+            width: 100%;
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 1rem;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s, transform 0.1s;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+            box-shadow: 0 4px 6px -1px rgba(59, 130, 246, 0.3);
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-dark);
+            transform: translateY(-1px);
+        }
+
+        .btn-primary:active {
+            transform: translateY(0);
+        }
+
+        .btn-primary:disabled {
+            background: #cbd5e1;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        /* Results & Status */
+        .status-box {
+            margin-top: 1.5rem;
+            font-size: 0.9rem;
+            text-align: center;
+            min-height: 24px;
+        }
+
+        .error-message {
+            color: var(--error);
+            background: #fef2f2;
+            padding: 0.75rem;
+            border-radius: 8px;
+            border: 1px solid #fecaca;
+            display: none;
+            text-align: left;
+            margin-top: 1rem;
+        }
+
+        .success-card {
+            display: none;
+            /* JS ile açılacak */
+            background: #ecfdf5;
+            border: 1px solid #a7f3d0;
+            border-radius: 16px;
+            padding: 1.5rem;
+            margin-top: 1.5rem;
+            text-align: center;
+            animation: fadeIn 0.5s ease;
+        }
+
+        .success-icon {
+            width: 48px;
+            height: 48px;
+            background: #10b981;
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 1rem;
+        }
+
+        .download-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background: #059669;
+            color: white;
+            text-decoration: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            font-weight: 600;
+            margin-top: 1rem;
+            transition: background 0.2s;
+            gap: 8px;
+        }
+
+        .download-btn:hover {
+            background: #047857;
+        }
+
+        /* Loader Animation */
+        .spinner {
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 1s ease-in-out infinite;
+            display: none;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Hidden Input */
+        input[type="file"] {
+            display: none;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="card">
+        <div class="header">
+            <div class="logo-area">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"
+                    stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round"
+                        d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+            </div>
+            <h1>Paket Listesi Dönüştürücü</h1>
+            <p class="subtitle">PDF dosyalarınızı yükleyin, saniyeler içinde Excel uyumlu XLSX formatına
+                dönüştürün.</p>
+        </div>
+
+        <div class="content">
+            <form id="convertForm">
+                <div class="upload-zone" id="dropZone">
+                    <input type="file" id="fileInput" name="file" accept=".pdf">
+
+                    <div class="upload-icon">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" fill="none" viewBox="0 0 24 24"
+                            stroke="currentColor" stroke-width="1.5">
+                            <path stroke-linecap="round" stroke-linejoin="round"
+                                d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                        </svg>
+                    </div>
+                    <div class="upload-text">Dosya Seçin veya Sürükleyin</div>
+                    <div class="upload-hint">PDF</div>
+                </div>
+
+                <div id="fileInfoDisplay" class="file-info">
+                    <div class="file-icon">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24"
+                            stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round"
+                                d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
+                        </svg>
+                    </div>
+                    <span class="file-name" id="fileName">dosya_adi.pdf</span>
+                </div>
+
+                <div id="errorMessage" class="error-message"></div>
+
+                <button type="submit" id="submitBtn" class="btn-primary">
+                    <span class="spinner" id="spinner"></span>
+                    <span id="btnText">Dönüştürmeyi Başlat</span>
+                </button>
+            </form>
+
+            <div id="successCard" class="success-card">
+                <div class="success-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24"
+                        stroke="currentColor" stroke-width="3">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                    </svg>
+                </div>
+                <h3 style="color: #065f46; margin-bottom: 0.5rem;">İşlem Tamamlandı!</h3>
+                <p style="color: #047857; font-size: 0.9rem; margin-bottom: 1rem;">Dosyanız başarıyla işlendi ve Excel
+                    formatına çevrildi.</p>
+
+                <a href="#" id="downloadLink" class="download-btn" target="_blank">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24"
+                        stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round"
+                            d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                    </svg>
+                    XLSX İndir
+                </a>
+            </div>
+
+            <div class="status-box">
+                <small id="statusText" style="color: #64748b;"></small>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const form = document.getElementById('convertForm');
+        const fileInput = document.getElementById('fileInput');
+        const dropZone = document.getElementById('dropZone');
+        const fileInfoDisplay = document.getElementById('fileInfoDisplay');
+        const fileName = document.getElementById('fileName');
+        const submitBtn = document.getElementById('submitBtn');
+        const btnText = document.getElementById('btnText');
+        const spinner = document.getElementById('spinner');
+        const errorMessage = document.getElementById('errorMessage');
+        const successCard = document.getElementById('successCard');
+        const downloadLink = document.getElementById('downloadLink');
+        const statusText = document.getElementById('statusText');
+
+        // --- Drag & Drop Olayları ---
+        dropZone.addEventListener('click', () => fileInput.click());
+
+        dropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropZone.classList.add('drag-over');
+        });
+
+        dropZone.addEventListener('dragleave', () => {
+            dropZone.classList.remove('drag-over');
+        });
+
+        dropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropZone.classList.remove('drag-over');
+
+            if (e.dataTransfer.files.length) {
+                fileInput.files = e.dataTransfer.files;
+                handleFileSelect();
+            }
+        });
+
+        fileInput.addEventListener('change', handleFileSelect);
+
+        function handleFileSelect() {
+            if (fileInput.files.length > 0) {
+                fileName.textContent = fileInput.files[0].name;
+                dropZone.style.display = 'none'; // Alanı gizle
+                fileInfoDisplay.classList.add('active'); // Dosya bilgisini göster
+                resetUI();
+            }
+        }
+
+        function resetUI() {
+            successCard.style.display = 'none';
+            errorMessage.style.display = 'none';
+            statusText.textContent = '';
+        }
+
+        function setLoading(isLoading) {
+            if (isLoading) {
+                submitBtn.disabled = true;
+                submitBtn.style.opacity = '0.8';
+                spinner.style.display = 'block';
+                btnText.textContent = 'İşleniyor...';
+                statusText.textContent = 'Dosya sunucuya yükleniyor ve n8n ile işleniyor. Bu işlem dosya boyutuna göre 1-2 dakika sürebilir.';
+            } else {
+                submitBtn.disabled = false;
+                submitBtn.style.opacity = '1';
+                spinner.style.display = 'none';
+                btnText.textContent = 'Dönüştürmeyi Başlat';
+                statusText.textContent = '';
+            }
+        }
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            if (!fileInput.files.length) {
+                alert('Lütfen önce bir dosya seçin!');
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('file', fileInput.files[0]);
+
+            setLoading(true);
+            resetUI();
+            try {
+                const response = await fetch('http://localhost:3000/api/convert', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                // JSON kontrolü
+                const contentType = response.headers.get("content-type");
+                if (!contentType || !contentType.includes("application/json")) {
+                    const errorText = await response.text();
+                    console.error("Sunucu HTML döndürdü:", errorText);
+
+                    if (response.status === 504) {
+                        throw new Error("İşlem zaman aşımına uğradı (504 Timeout). Dosya işleniyor olabilir ancak sunucu cevap vermeyi kesti.");
+                    } else if (response.status === 413) {
+                        throw new Error("Dosya boyutu çok büyük.");
+                    } else {
+                        throw new Error(`Sunucu hatası: ${response.status}. Lütfen yöneticiye başvurun.`);
+                    }
+                }
+
+                const data = await response.json();
+
+                if (response.ok && data.success) {
+                    successCard.style.display = 'block';
+                    // Formu gizle ki odak sonuca kaysın
+                    form.style.display = 'none';
+
+                    downloadLink.href = data.xlsx_url;
+                    downloadLink.setAttribute('download', data.file_name);
+                } else {
+                    throw new Error(data.error || 'Dönüştürme başarısız oldu.');
+                }
+
+            } catch (error) {
+                console.error('Hata:', error);
+                errorMessage.textContent = '❌ ' + error.message;
+                errorMessage.style.display = 'block';
+            } finally {
+                setLoading(false);
+                // Eğer başarılıysa butonu tekrar gösterme, sayfayı yenileme gerekir
+                if (successCard.style.display === 'block') {
+                    // Opsiyonel: "Yeni Dosya Yükle" butonu eklenebilir
+                }
+            }
+        });
+    </script>
+</body>
+
+</html>
