@@ -6,7 +6,7 @@ const path = require('path');
 
 const app = express();
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
-const PORT = 3000;
+const PORT = 3022;
 
 app.use(cors());
 app.use(express.json());
@@ -18,3 +18,6 @@ app.listen(PORT, () => {
     console.log(`🚀 Sunucu ${PORT} portunda çalışıyor...`);
     console.log(`📡 Endpoint: http://localhost:${PORT}/api/convert`);
 });
+
+
+
