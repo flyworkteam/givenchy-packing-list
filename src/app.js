@@ -6,7 +6,7 @@ const path = require('path');
 
 const app = express();
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
-const PORT = 3022;
+const PORT = 3031;
 
 app.use(cors());
 app.use(express.json());
