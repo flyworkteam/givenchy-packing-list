@@ -9,6 +9,17 @@ const xlsx = require('xlsx'); // EXCEL KÜTÜPHANESİ
 const storageService = require('../services/storageService');
 
 /**
+ * PDF'deki miktarı sayıya çevirir (ör. "2.000" → "2000", binlik ayraç nokta).
+ */
+function normalizeQuantity(qtyStr) {
+    if (!qtyStr) return qtyStr;
+    if (/\.\d{3}/.test(qtyStr)) {
+        return qtyStr.replace(/\./g, '');
+    }
+    return qtyStr;
+}
+
+/**
  * Metin haline gelmiş PDF'i kurallara göre JSON formatına dönüştürür.
  */
 function parsePackingList(text) {
@@ -20,7 +31,7 @@ function parsePackingList(text) {
 
     // KURAL DEĞİŞİKLİĞİ: P ile başlayan 7 hane olacak AMA içinde en az 1 tane rakam (?=.*\d) barındıracak.
     // Bu sayede "PARCELS", "PACKAGE" gibi sadece harften oluşan kelimeler elenmiş olur.
-    const productRegex = /(P(?=.*\d)[A-Za-z0-9]{6})\s+(.*)\s+(\d+)(?:\s|$)/i;
+    const productRegex = /(P(?=.*\d)[A-Za-z0-9]{6})\s+(.*)\s+(\d{1,3}(?:\.\d{3})*)(?:\s|$)/i;
     const auRegex = /(\d+)\s+(?:COLIS IDENTIQUES|IDENTICAL PARCELS)/i;
 
     for (let i = 0; i < lines.length; i++) {
@@ -53,7 +64,7 @@ function parsePackingList(text) {
                 gumruk_no: currentGumrukNo,
                 reference: prodMatch[1].toUpperCase(),    // Harfleri standart büyük harf yapar
                 description: prodMatch[2].trim(),         // Açıklama kısmı
-                quantity: prodMatch[3],                   // Miktar
+                quantity: normalizeQuantity(prodMatch[3]),  // Miktar (2.000 → 2000)
                 au: "1"
             };
         }
